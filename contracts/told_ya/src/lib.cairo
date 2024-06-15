@@ -1,7 +1,12 @@
+use starknet::{ContractAddress};
+
 #[starknet::interface]
-pub trait IHelloStarknet<TContractState> {
-    fn increase_balance(ref self: TContractState, amount: felt252);
-    fn get_balance(self: @TContractState) -> felt252;
+pub trait IToldYa<TContractState> {
+    fn create_event(ref self: TContractState, name: ByteArray, deadline: ByteArray, tags: Array<ByteArray>) -> ByteArray;
+    fn create_prediction(ref self: TContractState, event_id: ByteArray, value: Felt252Dict<ByteArray>) -> ByteArray;
+    fn get_past_user_predictions(self: @TContractState, user_address: ContractAddress) -> Span<Prediction>;
+    fn get_future_user_predictions(self: @TContractState, user_address: ContractAddress) -> Span<Prediction>;
+    fn get_future_events(self: @TContractState) -> Span<RealEvent>;
 }
 
 #[starknet::contract]
