@@ -5,7 +5,11 @@ pub trait IHelloStarknet<TContractState> {
 }
 
 #[starknet::contract]
-mod HelloStarknet {
+mod Toldya {
+
+    use starknet::ContractAddress;
+    use openzeppelin::access::ownable::OwnableComponent;
+
     #[storage]
     struct Storage {
         balance: felt252,
