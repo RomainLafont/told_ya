@@ -2,11 +2,11 @@ use starknet::{ContractAddress};
 
 #[starknet::interface]
 pub trait IToldYa<TContractState> {
-    fn create_event(ref self: TContractState, name: ByteArray, deadline: ByteArray, tags: Array<ByteArray>) -> ByteArray;
+    fn create_event(ref self: TContractState, name: ByteArray, deadline: ByteArray, types: Array<ByteArray>) -> ByteArray;
     fn create_prediction(ref self: TContractState, event_id: ByteArray, value: Felt252Dict<ByteArray>) -> ByteArray;
-    fn get_past_user_predictions(self: @TContractState, user_address: ContractAddress) -> Span<Prediction>;
-    fn get_future_user_predictions(self: @TContractState, user_address: ContractAddress) -> Span<Prediction>;
-    fn get_future_events(self: @TContractState) -> Span<RealEvent>;
+    fn get_past_user_predictions(self: @TContractState, user_address: ContractAddress) -> Array<Prediction>;
+    fn get_future_user_predictions(self: @TContractState, user_address: ContractAddress) -> Array<Prediction>;
+    fn get_future_events(self: @TContractState) -> Array<RealEvent>;
 }
 
 #[starknet::contract]
