@@ -2,12 +2,26 @@ use starknet::{ContractAddress};
 
 #[starknet::interface]
 pub trait IToldYa<TContractState> {
-    fn create_event(ref self: TContractState, name: ByteArray, deadline: ByteArray, types: Array<ByteArray>) -> ByteArray;
-    fn create_prediction(ref self: TContractState, event_id: ByteArray, value: Felt252Dict<ByteArray>) -> ByteArray;
-    fn get_past_user_predictions(self: @TContractState, user_address: ContractAddress) -> Array<Prediction>;
-    fn get_future_user_predictions(self: @TContractState, user_address: ContractAddress) -> Array<Prediction>;
-    fn get_future_events(self: @TContractState) -> Array<RealEvent>;
-    fn reveal_predictions(ref self: TContractState, predictions_identifiers: Array<ByteArray>) -> Array<Prediction>;
+    fn create_event(ref self: TContractState, name: ByteArray, predictionsDeadline: ByteArray, eventDatetime: ByteArray, type_: ByteArray) -> Event;
+    fn create_prediction(ref self: TContractState, event_identifier: ByteArray, value: ByteArray) -> Prediction;
+    fn get_events(self: @TContractState) -> Array<Event>;
+    fn get_predictions(self: @TContractState) -> Array<Prediction>;
+    fn get_user_predictions(self: @TContractState, user: ContractAddress) -> Array<Prediction>;
+}
+
+pub struct Event {
+    identifier: ByteArray,
+    name: ByteArray,
+    predictionsDeadline: ByteArray,
+    eventDatetime: ByteArray,
+    type_: ByteArray,
+}
+
+pub struct Prediction {
+    identifier: ByteArray,
+    event_identifier: ByteArray,
+    value: ByteArray,
+    creator: ContractAddress,
 }
 
 #[starknet::contract]
