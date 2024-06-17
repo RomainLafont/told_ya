@@ -10,9 +10,29 @@ mod Toldya {
     use starknet::ContractAddress;
     use openzeppelin::access::ownable::OwnableComponent;
 
+    component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
+
+    #[abi(embed_v0)]
+    impl OwnableImpl = OwnableComponent::OwnableImpl<ContractState>;
+
+    impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
+
     #[storage]
     struct Storage {
-        balance: felt252,
+        #[substorage(v0)]
+        ownable: OwnableComponent::Storage,
+        balance: felt252
+    }
+
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        OwnableEvent: OwnableComponent::Event
+    }
+
+    #[constructor]
+    fn constructor(ref self: ContractState, initial_owner: ContractAddress){
+        self.ownable.initializer(initial_owner);
     }
 
     #[abi(embed_v0)]
