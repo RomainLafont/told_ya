@@ -7,6 +7,7 @@ pub trait IToldYa<TContractState> {
     fn get_past_user_predictions(self: @TContractState, user_address: ContractAddress) -> Array<Prediction>;
     fn get_future_user_predictions(self: @TContractState, user_address: ContractAddress) -> Array<Prediction>;
     fn get_future_events(self: @TContractState) -> Array<RealEvent>;
+    fn reveal_predictions(ref self: TContractState, predictions_identifiers: Array<ByteArray>) -> Array<Prediction>;
 }
 
 #[starknet::contract]
