@@ -1,7 +1,27 @@
+use starknet::{ContractAddress};
+
 #[starknet::interface]
-pub trait IHelloStarknet<TContractState> {
-    fn increase_balance(ref self: TContractState, amount: felt252);
-    fn get_balance(self: @TContractState) -> felt252;
+pub trait IToldYa<TContractState> {
+    fn create_event(ref self: TContractState, name: ByteArray, predictionsDeadline: ByteArray, eventDatetime: ByteArray, type_: ByteArray) -> Event;
+    fn create_prediction(ref self: TContractState, event_identifier: ByteArray, value: ByteArray) -> Prediction;
+    fn get_events(self: @TContractState) -> Array<Event>;
+    fn get_predictions(self: @TContractState) -> Array<Prediction>;
+    fn get_user_predictions(self: @TContractState, user: ContractAddress) -> Array<Prediction>;
+}
+
+pub struct Event {
+    identifier: ByteArray,
+    name: ByteArray,
+    predictionsDeadline: ByteArray,
+    eventDatetime: ByteArray,
+    type_: ByteArray,
+}
+
+pub struct Prediction {
+    identifier: ByteArray,
+    event_identifier: ByteArray,
+    value: ByteArray,
+    creator: ContractAddress,
 }
 
 #[starknet::contract]
