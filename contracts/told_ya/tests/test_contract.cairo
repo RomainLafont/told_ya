@@ -2,10 +2,12 @@ use starknet::ContractAddress;
 
 use snforge_std::{declare, ContractClassTrait};
 
-use told_ya::IHelloStarknetSafeDispatcher;
-use told_ya::IHelloStarknetSafeDispatcherTrait;
-use told_ya::IHelloStarknetDispatcher;
-use told_ya::IHelloStarknetDispatcherTrait;
+use told_ya::IToldYaSafeDispatcher;
+use told_ya::IToldYaSafeDispatcherTrait;
+use told_ya::IToldYaDispatcher;
+use told_ya::IToldYaDispatcherTrait;
+use told_ya::Event_;
+use told_ya::Prediction;
 
 fn deploy_contract(name: ByteArray) -> ContractAddress {
     let contract = declare(name).unwrap();
@@ -14,34 +16,64 @@ fn deploy_contract(name: ByteArray) -> ContractAddress {
 }
 
 #[test]
-fn test_increase_balance() {
-    let contract_address = deploy_contract("HelloStarknet");
+fn test_create_event() {
+    let contract_address = deploy_contract("ToldYa");
 
-    let dispatcher = IHelloStarknetDispatcher { contract_address };
+    let dispatcher = IToldYaDispatcher { contract_address };
 
-    let balance_before = dispatcher.get_balance();
-    assert(balance_before == 0, 'Invalid balance');
+    // Event
+    let name: felt252 = 'test_event';
+    let predictions_deadline: felt252 = '2024-08-24';
+    let event_datetime: felt252 = '2024-08-25';
+    let type_: felt252 = 'football';
 
-    dispatcher.increase_balance(42);
+    let create_event_response = dispatcher.create_event(name, predictions_deadline, event_datetime, type_);
 
-    let balance_after = dispatcher.get_balance();
-    assert(balance_after == 42, 'Invalid balance');
+    let new_event_identifier = create_event_response.identifier;
+
+    let read_events_response = dispatcher.get_events();
+
+    assert(read_events_response.at(0).identifier == @new_event_identifier, 'Invalid identifier');
+    assert(read_events_response.at(0).name == @name, 'Invalid name');
+    assert(read_events_response.at(0).predictions_deadline == @predictions_deadline, 'Invalid predictions_deadline');
+    assert(read_events_response.at(0).event_datetime == @event_datetime, 'Invalid datetime');
+    assert(read_events_response.at(0).type_ == @type_, 'Invalid _type');
 }
 
 #[test]
-#[feature("safe_dispatcher")]
-fn test_cannot_increase_balance_with_zero_value() {
-    let contract_address = deploy_contract("HelloStarknet");
+fn test_create_prediction() {
+    let contract_address = deploy_contract("ToldYa");
 
-    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
+    let dispatcher = IToldYaDispatcher { contract_address };
 
-    let balance_before = safe_dispatcher.get_balance().unwrap();
-    assert(balance_before == 0, 'Invalid balance');
+    // Event
+    let name: felt252 = 'test_event';
+    let predictions_deadline: felt252 = '2024-08-24';
+    let event_datetime: felt252 = '2024-08-25';
+    let type_: felt252 = 'football';
 
-    match safe_dispatcher.increase_balance(0) {
-        Result::Ok(_) => core::panic_with_felt252('Should have panicked'),
-        Result::Err(panic_data) => {
-            assert(*panic_data.at(0) == 'Amount cannot be 0', *panic_data.at(0));
-        }
-    };
+    let create_event_response = dispatcher.create_event(name, predictions_deadline, event_datetime, type_);
+
+    let new_event_identifier = create_event_response.identifier;
+
+    let read_events_response = dispatcher.get_events();
+
+    assert(read_events_response.at(0).identifier == @new_event_identifier, 'Invalid identifier');
+    assert(read_events_response.at(0).name == @name, 'Invalid name');
+    assert(read_events_response.at(0).predictions_deadline == @predictions_deadline, 'Invalid predictions_deadline');
+    assert(read_events_response.at(0).event_datetime == @event_datetime, 'Invalid datetime');
+    assert(read_events_response.at(0).type_ == @type_, 'Invalid _type');
+
+    // Prediction
+    let value: felt252 = 'test_value';
+
+    let create_prediction_response = dispatcher.create_prediction(new_event_identifier, value);
+
+    let new_prediction_identifier = create_prediction_response.identifier;
+
+    let read_predictions_response = dispatcher.get_predictions();
+
+    assert(read_predictions_response.at(0).identifier == @new_prediction_identifier, 'Invalid identifier');
+    assert(read_predictions_response.at(0).event_identifier == @new_event_identifier, 'Invalid event_identifier');
+    assert(read_predictions_response.at(0).value == @value, 'Invalid value');
 }

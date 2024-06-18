@@ -13,23 +13,23 @@ pub trait IToldYa<TContractState> {
 
 #[derive(Serde, Drop, Copy, starknet::Store)]
 pub struct Event_ {
-    identifier: felt252,
-    name: felt252,
-    predictions_deadline: felt252,
-    event_datetime: felt252,
-    type_: felt252,
+    pub identifier: felt252,
+    pub name: felt252,
+    pub predictions_deadline: felt252,
+    pub event_datetime: felt252,
+    pub type_: felt252,
 }
 
 #[derive(Serde, Drop, Copy, starknet::Store)]
 pub struct Prediction {
-    identifier: felt252,
-    event_identifier: felt252,
-    value: felt252,
-    creator: ContractAddress,
+    pub identifier: felt252,
+    pub event_identifier: felt252,
+    pub value: felt252,
+    pub creator: ContractAddress,
 }
 
 #[starknet::contract]
-mod Toldya {    
+mod ToldYa {    
 
     use core::poseidon::PoseidonTrait;
     use core::hash::{Hash, HashStateTrait, HashStateExTrait};
@@ -62,8 +62,9 @@ mod Toldya {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, initial_owner: super::ContractAddress){
-        self.ownable.initializer(initial_owner);
+    fn constructor(ref self: ContractState){
+        let caller_address = starknet::get_caller_address();
+        self.ownable.initializer(caller_address);
     }
 
     #[abi(embed_v0)]
