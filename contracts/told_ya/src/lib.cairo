@@ -5,10 +5,10 @@ use core::hash::{Hash, HashStateTrait, HashStateExTrait};
 #[starknet::interface]
 pub trait IToldYa<TContractState> {
     fn create_event(ref self: TContractState, name: felt252, predictions_deadline: felt252, event_datetime: felt252, type_: felt252) -> Event_;
-    // fn create_prediction(ref self: TContractState, event_identifier: ByteArray, value: ByteArray) -> Prediction;
+    fn create_prediction(ref self: TContractState, event_identifier: felt252, value: felt252) -> Prediction;
     fn get_events(self: @TContractState) -> Array<Event_>;
-    // fn get_predictions(self: @TContractState) -> Array<Prediction>;
-    // fn get_user_predictions(self: @TContractState, user: ContractAddress) -> Array<Prediction>;
+    fn get_predictions(self: @TContractState) -> Array<Prediction>;
+    fn get_user_predictions(self: @TContractState, user: ContractAddress) -> Array<Prediction>;
 }
 
 #[derive(Serde, Drop, Copy, starknet::Store)]
@@ -20,11 +20,11 @@ pub struct Event_ {
     type_: felt252,
 }
 
-#[derive(Serde, Drop, starknet::Store)]
+#[derive(Serde, Drop, Copy, starknet::Store)]
 pub struct Prediction {
-    identifier: ByteArray,
-    event_identifier: ByteArray,
-    value: ByteArray,
+    identifier: felt252,
+    event_identifier: felt252,
+    value: felt252,
     creator: ContractAddress,
 }
 
@@ -33,20 +33,24 @@ mod Toldya {
 
     use core::poseidon::PoseidonTrait;
     use core::hash::{Hash, HashStateTrait, HashStateExTrait};
+    use starknet::ContractAddress;
     use super::Event_;
+    use super::Prediction;
     use super::StoreFelt252Array;
 
     component!(path: super::OwnableComponent, storage: ownable, event: OwnableEvent);
 
     #[abi(embed_v0)]
     impl OwnableImpl = super::OwnableComponent::OwnableImpl<ContractState>;
-
     impl OwnableInternalImpl = super::OwnableComponent::InternalImpl<ContractState>;
 
     #[storage]
     struct Storage {
         events: LegacyMap::<felt252, Event_>,
         events_id: Array<felt252>,
+        predictions: LegacyMap::<felt252, Prediction>,
+        predictions_id: Array<felt252>,
+        user_predictions_id: LegacyMap::<ContractAddress, Array<felt252>>,
         #[substorage(v0)]
         ownable: super::OwnableComponent::Storage
     }
@@ -94,6 +98,58 @@ mod Toldya {
             new_event
         }
 
+        fn create_prediction(ref self: ContractState, event_identifier: felt252, value: felt252) -> Prediction {
+
+            // 1) Checking if event_identifier is valid
+            let mut events_id: Array<felt252> = self.events_id.read();
+            let mut event_id_is_valid: bool = false;
+            while !events_id.is_empty(){
+                let event_id = events_id.pop_front().unwrap();
+                if event_identifier == event_id {
+                    event_id_is_valid = true;
+                }
+            };
+            assert!(event_id_is_valid == true, "event_identifier is not valid.");
+
+            // 2) Checking if the user has already made a prediction on the event
+            let caller_address = starknet::get_caller_address();
+            let mut user_predictions_id: Array<felt252> = self.user_predictions_id.read(caller_address);
+            while !user_predictions_id.is_empty(){
+                let user_prediction_id = user_predictions_id.pop_front().unwrap();
+                let user_prediction = self.predictions.read(user_prediction_id);
+                assert!(user_prediction.event_identifier != event_identifier, "A prediction has already been created with for this event." )
+            };
+
+            // 3) Hashing the new prediction
+            let caller_address = starknet::get_caller_address();
+            let hash_state = PoseidonTrait::new();
+            let hash_result: felt252 = hash_state.update(event_identifier).update(value).update(caller_address.into()).finalize();    
+
+            // 4) Creating the instance of the new prediction
+            let new_prediction: Prediction = Prediction {
+                identifier: hash_result, 
+                event_identifier: event_identifier,
+                value: value,
+                creator: caller_address
+            };
+
+            // 5) Storing the new event in Storage
+            self.predictions.write(new_prediction.identifier, new_prediction);  
+
+            // 6) Adding the id to predictions_id
+            let mut predictions_id: Array<felt252> = self.predictions_id.read();
+            predictions_id.append(new_prediction.identifier);
+            self.predictions_id.write(predictions_id);
+
+            // 7) Adding the id to user_predictions_id
+            let mut user_predictions_id: Array<felt252> = self.user_predictions_id.read(caller_address);
+            user_predictions_id.append(new_prediction.identifier);
+            self.user_predictions_id.write(caller_address, user_predictions_id);
+
+            // 8) Returning the new event
+            new_prediction
+        }
+
         fn get_events(self: @ContractState) -> Array<Event_> {
             let mut events_id: Array<felt252> = self.events_id.read();
             let mut events = ArrayTrait::<Event_>::new();
@@ -103,6 +159,29 @@ mod Toldya {
                 events.append(event);
             };
             events
+        }
+
+        fn get_predictions(self: @ContractState) -> Array<Prediction> {
+            let mut predictions_id: Array<felt252> = self.predictions_id.read();
+            let mut predictions = ArrayTrait::<Prediction>::new();
+            while !predictions_id.is_empty(){
+                let prediction_id = predictions_id.pop_front().unwrap();
+                let prediction = self.predictions.read(prediction_id);
+                predictions.append(prediction);
+            };
+            predictions
+        }
+
+        fn get_user_predictions(self: @ContractState, user: ContractAddress) -> Array<Prediction> {
+            let caller_address = starknet::get_caller_address();
+            let mut user_predictions_id: Array<felt252> = self.user_predictions_id.read(caller_address);
+            let mut user_predictions = ArrayTrait::<Prediction>::new();
+            while !user_predictions_id.is_empty(){
+                let user_prediction_id = user_predictions_id.pop_front().unwrap();
+                let user_prediction = self.predictions.read(user_prediction_id);
+                user_predictions.append(user_prediction);
+            };
+            user_predictions
         }
     }
 }
