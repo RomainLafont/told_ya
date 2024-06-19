@@ -29,7 +29,7 @@ pub struct Prediction {
 }
 
 #[starknet::contract]
-mod ToldYa {    
+mod ToldYa {
 
     use core::poseidon::PoseidonTrait;
     use core::hash::{Hash, HashStateTrait, HashStateExTrait};
@@ -80,7 +80,7 @@ mod ToldYa {
 
             // 3) Creating the instance of the new event
             let new_event: Event_ = Event_ {
-                identifier: hash_result, 
+                identifier: hash_result,
                 name: name,
                 predictions_deadline: predictions_deadline,
                 event_datetime: event_datetime,
@@ -125,18 +125,18 @@ mod ToldYa {
             // 3) Hashing the new prediction
             let caller_address = starknet::get_caller_address();
             let hash_state = PoseidonTrait::new();
-            let hash_result: felt252 = hash_state.update(event_identifier).update(value).update(caller_address.into()).finalize();    
+            let hash_result: felt252 = hash_state.update(event_identifier).update(value).update(caller_address.into()).finalize();
 
             // 4) Creating the instance of the new prediction
             let new_prediction: Prediction = Prediction {
-                identifier: hash_result, 
+                identifier: hash_result,
                 event_identifier: event_identifier,
                 value: value,
                 creator: caller_address
             };
 
             // 5) Storing the new event in Storage
-            self.predictions.write(new_prediction.identifier, new_prediction);  
+            self.predictions.write(new_prediction.identifier, new_prediction);
 
             // 6) Adding the id to predictions_id
             let mut predictions_id: Array<felt252> = self.predictions_id.read();
@@ -190,7 +190,7 @@ mod ToldYa {
 
 
 
-// This block of code is used to store Array<felt252> in the Storage. 
+// This block of code is used to store Array<felt252> in the Storage.
 // TODO: Move this block in another file and import it in this file.
 impl StoreFelt252Array of starknet::Store<Array<felt252>> {
     fn read(address_domain: u32, base: starknet::storage_access::StorageBaseAddress) -> starknet::SyscallResult<Array<felt252>> {
