@@ -101,6 +101,7 @@ mod ToldYa {
 
         fn create_prediction(ref self: ContractState, event_identifier: felt252, value: felt252) -> Prediction {
 
+            //TODO: [PERF] Use the storage var `events_id` to check if the event_identifier is valid.
             // 1) Checking if event_identifier is valid
             let mut events_id: Array<felt252> = self.events_id.read();
             let mut event_id_is_valid: bool = false;
