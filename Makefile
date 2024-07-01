@@ -1,4 +1,10 @@
-PHONY: contract-full contract-artifacts declare-contract deploy-contract get-contract-class run-network
+PHONY: setup-unix contract-full contract-artifacts declare-contract deploy-contract get-contract-class run-network
+
+setup-unix: \
+	brew install asdf && \
+	asdf plugin add scarb && \
+	asdf install scarb 2.6.3 && \
+	asdf global scarb 2.6.3
 
 contract-full: \
 	make contract-artifacts && \

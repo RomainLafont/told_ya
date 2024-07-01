@@ -15,6 +15,14 @@ Requirements:
 - starkli: 0.2.9
 - katana: 0.7.2 (dev dependency)
 
+### Setup
+
+Install the requirements:
+
+```bash
+make setup
+```
+
 ### Commands
 
 Run devnet:
