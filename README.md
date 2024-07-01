@@ -20,7 +20,7 @@ Requirements:
 Install the requirements:
 
 ```bash
-make setup
+make setup-unix
 ```
 
 ### Commands
@@ -31,7 +31,7 @@ Run devnet:
 make run-network
 ```
 
-Declare and deploy on devnet
+In another terminal window, declare and deploy on devnet:
 
 ```bash
 make contract-full
