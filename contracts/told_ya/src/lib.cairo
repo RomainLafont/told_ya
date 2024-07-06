@@ -9,6 +9,7 @@ pub trait IToldYa<TContractState> {
     fn get_events(self: @TContractState) -> Array<Event_>;
     fn get_predictions(self: @TContractState) -> Array<Prediction>;
     fn get_user_predictions(self: @TContractState, user: ContractAddress) -> Array<Prediction>;
+    fn buy_prediction (ref self: TContractState, prediction_identifier: felt252) -> bool;
 }
 
 #[derive(Serde, Drop, Copy, starknet::Store)]
